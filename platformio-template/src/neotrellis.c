@@ -7,9 +7,28 @@
 
 const int SDA = 20; //I2C0 SDA, p. 541
 const int SCL = 21; //I2C0 SCL, p. 541
+const int INT = 22; //interrupt pin
+
+
+
+//[status reg addr, sfw reg addr, send 8-bit value]
+uint8_t swrst_write[] = {0x00, 0x7F, 0x01};
+
+//[gpio reg addr, intEnSet reg addr, send 32-bit value ]
+uint8_t int_enable_write[] = {0x01, 0x08, 0x00, 0x00, 0x01, 0x00};
+
+//[gpio reg addr, intFlag reg addr, send 32-bit 1's]
+uint8_t int_clear_write[] = {0x01, 0x09, 0xFF, 0xFF, 0xFF, 0xFF};
+
+// []
+
+//address for NeoTrellis is 0x2E
+uint8_t trellis_addr = 0x2E;
 
 void init_i2c() {
   i2c_init(i2c0, 100000);
+
+  gpio_init(22); //initialize 22 to receive interrupt
 
   gpio_set_function(SDA, GPIO_FUNC_I2C);
   gpio_set_function(SCL, GPIO_FUNC_I2C);
@@ -21,6 +40,19 @@ void init_i2c() {
   gpio_set_slew_rate(SCL, GPIO_SLEW_RATE_SLOW);
   gpio_set_input_hysteresis_enabled(SDA, true);
   gpio_set_input_hysteresis_enabled(SCL, true);
+}
+
+void trellis_irq() {
+  // Software Reset for NeoTrellis
+  i2c_write_blocking(i2c0, trellis_addr, &swrst_write , 3, 0); //software reset
+
+  // Interrupt Enable
+  i2c_write_blocking(i2c0, trellis_addr, &int_enable_write, 6, 0);
+}
+
+void trellis_isr() {
+  // Clear Interrupts
+  i2c_write_blocking(i2c0, trellis_addr, &int_clear_write, 6, 0);
 }
 // NeoTrellis with Interrupt Example
 
