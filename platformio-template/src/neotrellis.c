@@ -1,3 +1,27 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "pico/stdlib.h"
+#include "hardware/i2c.h"
+#include "neotrellis.h"
+
+const int SDA = 20; //I2C0 SDA, p. 541
+const int SCL = 21; //I2C0 SCL, p. 541
+
+void init_i2c() {
+  i2c_init(i2c0, 100000);
+
+  gpio_set_function(SDA, GPIO_FUNC_I2C);
+  gpio_set_function(SCL, GPIO_FUNC_I2C);
+
+  // 12.2.1.3, p. 893
+  gpio_pull_up(SDA);
+  gpio_pull_up(SCL);
+  gpio_set_slew_rate(SDA, GPIO_SLEW_RATE_SLOW);
+  gpio_set_slew_rate(SCL, GPIO_SLEW_RATE_SLOW);
+  gpio_set_input_hysteresis_enabled(SDA, true);
+  gpio_set_input_hysteresis_enabled(SCL, true);
+}
 // NeoTrellis with Interrupt Example
 
 /*
